@@ -187,13 +187,55 @@ void pixelsOff() {
 }
 
 void outside() {
-  int count = 46;
-  for(int i = 47; i < 97; i++){
-    pixels.setPixelColor(i, pixels.Color(200,200,0));
-    pixels.setPixelColor(count, pixels.Color(200,200,0));
+  int count = 47;
+  int delaySpeed1 = 15;
+  int delaySpeed2 = 20;
+  for(int i = 48; i < 97; i++){
+    pixels.setPixelColor(i, pixels.Color(200, 200, 0));
+    pixels.setPixelColor(i - 1, pixels.Color(200, 200, 0));
+    pixels.setPixelColor(i - 2, pixels.Color(200, 200, 0));
+    pixels.setPixelColor(i - 3, pixels.Color(40, 40, 0));
+    
+    pixels.setPixelColor(count, pixels.Color(200, 200, 0));
+    pixels.setPixelColor(count + 1, pixels.Color(200, 200, 0));
+    pixels.setPixelColor(count + 2, pixels.Color(200, 200, 0));
+    pixels.setPixelColor(count + 3, pixels.Color(40, 40, 0));
     pixels.show();
-    delay(10);
+    if (i > 65) {
+      delay(delaySpeed1);  
+    } else {
+      delay(delaySpeed2);
+    }
     count -= 1;
+  }
+}
+
+void inside() {
+  int j = 0;
+  int delaySpeed1 = 15;
+  int delaySpeed2 = 20;
+  for(int i = 97; i > 49; i--){
+    pixels.setPixelColor(j, pixels.Color(200, 200, 0));
+    pixels.setPixelColor(j - 1, pixels.Color(200, 200, 0));
+    pixels.setPixelColor(j - 2, pixels.Color(200, 200, 0));
+    pixels.setPixelColor(j - 3, pixels.Color(40, 40, 0));
+    if (j < 14) {
+      pixels.setPixelColor(j, pixels.Color(20, 20, 0));
+    }
+    pixels.setPixelColor(i - 2, pixels.Color(200, 200, 0));
+    pixels.setPixelColor(i - 1, pixels.Color(200, 200, 0));
+    pixels.setPixelColor(i, pixels.Color(200, 200, 0));
+    pixels.setPixelColor(i + 1, pixels.Color(40, 40, 0));
+    if (i > 83) {
+      pixels.setPixelColor(i, pixels.Color(20, 20, 0));
+    }
+    pixels.show();
+    if (i > 65) {
+      delay(delaySpeed1);  
+    } else {
+      delay(delaySpeed2);
+    }
+    j += 1;
   }
 }
 
@@ -208,10 +250,10 @@ void loop() {
   
   delay(1000);
   
-  outside();
+  inside();
   pixelsOff();
-  delay(50);
-  outside();
+  delay(100);
+  inside();
   
-  delay(1000);
+  delay(3000);
 }
