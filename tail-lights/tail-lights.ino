@@ -1,20 +1,33 @@
 
+#include <Adafruit_NeoPixel.h>
+#ifdef __AVR__
+  #include <avr/power.h>
+#endif
+
 #define brakeSwitch_pin 4
 #define parkingSwitch_pin 7
 #define stopLight_pin 3
 #define tailLight_pin1 5
 #define tailLight_pin2 9
+#define neoLights_pin 6
 
-boolean butt_flag = 0;      // флажок нажатия кнопки
-boolean butt;               // переменная, харнящая состояние кнопки
+#define NUMPIXELS 97
+
+// init variables
 int brakeSwitchState = 0;
 int parkingSwitchState = 0;
-boolean flag = 0;           // флажок режима
 boolean isParkingLightsOn = 0;
-unsigned long last_press;   // таймер для фильтра дребезга
 int highBrightness = 255;
 int lowBrightness = 20;
 int flameBrightness = 180;
+
+// NeoPixels
+// 1 - 14   left corner
+// 15 - 46  left center
+// 83 - 96  right center
+// 47 - 82  right corner
+
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, neoLights_pin, NEO_GRB + NEO_KHZ800);
 
 void setup() {
   pinMode(brakeSwitch_pin, INPUT_PULLUP); //INPUT_PULLUP
@@ -22,6 +35,7 @@ void setup() {
   pinMode(stopLight_pin, OUTPUT);
   pinMode(tailLight_pin1, OUTPUT);
   pinMode(tailLight_pin2, OUTPUT);
+  pixels.begin();
 }
 
 //Action functions
@@ -67,7 +81,6 @@ void parkingLightsActionSlow(String state) {
     analogWrite(tailLight_pin2, 0);  
   }
 }
-
 
 void brakingLightsAction(String state) {
   if (state == "On") {
@@ -161,10 +174,44 @@ void parkingLightsOnSlow() {
   }
 }
 
+// NeoPixels
+
+void pixelsOff() {
+  int j = 46;
+  for(int i = 47; i < 97; i++){
+    pixels.setPixelColor(i, pixels.Color(0,0,0));
+    pixels.setPixelColor(j, pixels.Color(0,0,0));
+    j -= 1;
+  }
+  pixels.show();
+}
+
+void outside() {
+  int count = 46;
+  for(int i = 47; i < 97; i++){
+    pixels.setPixelColor(i, pixels.Color(200,200,0));
+    pixels.setPixelColor(count, pixels.Color(200,200,0));
+    pixels.show();
+    delay(10);
+    count -= 1;
+  }
+}
+
 // MAIN
 void loop() {
   
   brakeLightOnSwitch();
 //  parkingLightOnSwitch();
   parkingLightsOnSlow();
+
+  pixelsOff();
+  
+  delay(1000);
+  
+  outside();
+  pixelsOff();
+  delay(50);
+  outside();
+  
+  delay(1000);
 }
