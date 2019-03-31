@@ -44,7 +44,7 @@ void parkingLightsActionSlow(String state) {
   int lightSpeed = 15;
   if (state == "On") {
     isParkingLightsOn = 1;
-    for (int i = 0; i < flameBrightness; i = i + 5) {
+    for (int i = 0; i < 100; i = i + 2) {
       analogWrite(stopLight_pin, i);
       analogWrite(tailLight_pin1, i);  
       analogWrite(tailLight_pin2, i); 
@@ -56,7 +56,7 @@ void parkingLightsActionSlow(String state) {
   }
   if (state == "Off") {
     isParkingLightsOn = 0;
-    for (int i = flameBrightness; i > 0; i = i - 5) {
+    for (int i = 100; i > 0; i = i - 2) {
       analogWrite(stopLight_pin, i);
       analogWrite(tailLight_pin1, i);  
       analogWrite(tailLight_pin2, i); 
@@ -138,19 +138,33 @@ void brakeLightOnSwitch() {
 void parkingLightOnSwitch() {  
   parkingSwitchState = digitalRead(parkingSwitch_pin);
   if (parkingSwitchState == HIGH) {
-    // turn LED on:
-//    parkingLightsActionSlow("On");
+    // turn on:
     parkingLightsAction("On");
   } else {
-    // turn LED off:
-//    parkingLightsActionSlow("Off");
+    // turn off:
     parkingLightsAction("Off");
   }
 }
 
+void parkingLightsOnSlow() {
+  parkingSwitchState = digitalRead(parkingSwitch_pin);
+  if (parkingSwitchState == HIGH) {
+    // turn on:
+    if (isParkingLightsOn == 0) {
+      parkingLightsActionSlow("On");
+    }
+  } else {
+    // turn off:
+    if (isParkingLightsOn == 1) {
+      parkingLightsActionSlow("Off");
+    }
+  }
+}
+
+// MAIN
 void loop() {
   
   brakeLightOnSwitch();
-  parkingLightOnSwitch();
-  
+//  parkingLightOnSwitch();
+  parkingLightsOnSlow();
 }
