@@ -19,7 +19,9 @@ int parkingSwitchState = 0;
 boolean isParkingLightsOn = 0;
 int highBrightness = 255;
 int lowBrightness = 20;
-int flameBrightness = 180;
+int flameBrightness = 250;
+int colorHigh = 255;
+int colorLow = 20;
 
 // NeoPixels
 // 1 - 14   left corner
@@ -108,7 +110,7 @@ void brakingLightsAction(String state) {
 
 void flameUp(int section) {
   int lightSpeed = 15;
-  for (int i = 0; i < flameBrightness; i = i + 2) {
+  for (int i = 0; i < flameBrightness; i = i + 3) {
     analogWrite(section, i);
     delay(lightSpeed);
   }
@@ -117,7 +119,7 @@ void flameUp(int section) {
 
 void flameDown(int section) {
   int lightSpeed = 15;
-  for (int i = flameBrightness; i > 0; i = i - 2) {
+  for (int i = flameBrightness; i > 0; i = i - 3) {
     analogWrite(section, i);
     delay(lightSpeed);
   }
@@ -186,20 +188,20 @@ void pixelsOff() {
   pixels.show();
 }
 
-void outside() {
+void toOutside(int delaySpeed1, int colorH, int colorL) {
   int count = 47;
-  int delaySpeed1 = 15;
-  int delaySpeed2 = 20;
+//  int delaySpeed1 = 15;
+  int delaySpeed2 = delaySpeed1 + 5;
   for(int i = 48; i < 97; i++){
-    pixels.setPixelColor(i, pixels.Color(200, 200, 0));
-    pixels.setPixelColor(i - 1, pixels.Color(200, 200, 0));
-    pixels.setPixelColor(i - 2, pixels.Color(200, 200, 0));
-    pixels.setPixelColor(i - 3, pixels.Color(40, 40, 0));
+    pixels.setPixelColor(i + 1, pixels.Color(colorH, colorH, 0));
+    pixels.setPixelColor(i, pixels.Color(colorH, colorH, 0));
+    pixels.setPixelColor(i - 1, pixels.Color(colorH, colorH, 0));
+    pixels.setPixelColor(i - 2, pixels.Color(colorL, colorL, 0));
     
-    pixels.setPixelColor(count, pixels.Color(200, 200, 0));
-    pixels.setPixelColor(count + 1, pixels.Color(200, 200, 0));
-    pixels.setPixelColor(count + 2, pixels.Color(200, 200, 0));
-    pixels.setPixelColor(count + 3, pixels.Color(40, 40, 0));
+    pixels.setPixelColor(count, pixels.Color(colorH, colorH, 0));
+    pixels.setPixelColor(count + 1, pixels.Color(colorH, colorH, 0));
+    pixels.setPixelColor(count + 2, pixels.Color(colorH, colorH, 0));
+    pixels.setPixelColor(count + 3, pixels.Color(colorL, colorL, 0));
     pixels.show();
     if (i > 65) {
       delay(delaySpeed1);  
@@ -210,25 +212,20 @@ void outside() {
   }
 }
 
-void inside() {
+void toInside(int delaySpeed1, int colorH, int colorL) {
   int j = 0;
-  int delaySpeed1 = 15;
-  int delaySpeed2 = 20;
-  for(int i = 97; i > 49; i--){
-    pixels.setPixelColor(j, pixels.Color(200, 200, 0));
-    pixels.setPixelColor(j - 1, pixels.Color(200, 200, 0));
-    pixels.setPixelColor(j - 2, pixels.Color(200, 200, 0));
-    pixels.setPixelColor(j - 3, pixels.Color(40, 40, 0));
-    if (j < 14) {
-      pixels.setPixelColor(j, pixels.Color(20, 20, 0));
-    }
-    pixels.setPixelColor(i - 2, pixels.Color(200, 200, 0));
-    pixels.setPixelColor(i - 1, pixels.Color(200, 200, 0));
-    pixels.setPixelColor(i, pixels.Color(200, 200, 0));
-    pixels.setPixelColor(i + 1, pixels.Color(40, 40, 0));
-    if (i > 83) {
-      pixels.setPixelColor(i, pixels.Color(20, 20, 0));
-    }
+//  int delaySpeed1 = 15;
+  int delaySpeed2 = delaySpeed1 + 5;
+  for(int i = 97; i > 49; i--) {
+    pixels.setPixelColor(j, pixels.Color(colorH, colorH, 0));
+    pixels.setPixelColor(j - 1, pixels.Color(colorH, colorH, 0));
+    pixels.setPixelColor(j - 2, pixels.Color(colorH, colorH, 0));
+    pixels.setPixelColor(j - 3, pixels.Color(colorL, colorL, 0));
+
+    pixels.setPixelColor(i - 2, pixels.Color(colorH, colorH, 0));
+    pixels.setPixelColor(i - 1, pixels.Color(colorH, colorH, 0));
+    pixels.setPixelColor(i, pixels.Color(colorH, colorH, 0));
+    pixels.setPixelColor(i + 1, pixels.Color(colorL, colorL, 0));
     pixels.show();
     if (i > 65) {
       delay(delaySpeed1);  
@@ -237,6 +234,32 @@ void inside() {
     }
     j += 1;
   }
+  for(int i = 44; i < 52; i++) {
+    pixels.setPixelColor(i + 1, pixels.Color(colorL, colorL, 0));
+  }
+  pixels.show();
+}
+
+void openCar() {
+  toOutside(10, 250, 10);
+  toInside(0, 250, 10);
+  toOutside(10, 250, 250);
+
+  flameLightAction("Up");
+  delay(2000);
+  parkingLightsActionSlow("Off");
+  pixelsOff();
+}
+
+void closeCar() {
+  brakingLightsAction("On");
+  toInside(10, 250, 10);
+  toOutside(0,  250, 10);
+  toInside(10, 250, 250);
+
+  flameLightAction("Down");
+  brakingLightsAction("Off");
+  toInside(10, 250, 0); 
 }
 
 // MAIN
@@ -249,11 +272,13 @@ void loop() {
   pixelsOff();
   
   delay(1000);
+//  
+//  openCar();
+//  
+//  delay(5000);
+
+  closeCar();
+
+  delay(5000);
   
-  inside();
-  pixelsOff();
-  delay(100);
-  inside();
-  
-  delay(3000);
 }
