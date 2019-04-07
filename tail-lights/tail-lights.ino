@@ -6,10 +6,12 @@
 #include<Wire.h>
 
 #define brakeSwitch_pin 4
+#define fogSwitch_pin 13
 #define parkingSwitch_pin 7
 #define stopLight_pin 3
 #define tailLight_pin1 5
 #define tailLight_pin2 9
+#define signLight_pin 10
 #define neoLights_pin 6
 #define openCar_pin 2
 #define closeCar_pin 8
@@ -19,7 +21,12 @@
 // init variables
 int brakeSwitchState = 0;
 int parkingSwitchState = 0;
+int openCarSwitchState = 0;
+int closeCarSwitchState = 0;
+int fogSwitchState = 0;
 boolean isParkingLightsOn = 0;
+boolean isSignLightsOn = 0;
+boolean isFogLightsOn = 0;
 int highBrightness = 255;
 int lowBrightness = 20;
 int flameBrightness = 250;
@@ -43,9 +50,11 @@ void setup() {
   pinMode(parkingSwitch_pin, INPUT_PULLUP);
   pinMode(openCar_pin, INPUT_PULLUP);
   pinMode(closeCar_pin, INPUT_PULLUP);
+  pinMode(fogSwitch_pin, INPUT_PULLUP);
   pinMode(stopLight_pin, OUTPUT);
   pinMode(tailLight_pin1, OUTPUT);
   pinMode(tailLight_pin2, OUTPUT);
+  pinMode(signLight_pin, OUTPUT);
   pixels.begin();
 
   Wire.begin();
@@ -57,6 +66,44 @@ void setup() {
 }
 
 //Action functions
+void signLightAction(String state) {
+  int lightSpeed = 10;    
+  if (state == "On") {
+    if (isSignLightsOn == 0) {
+      for (int i = 0; i <= 255; i = i + 2) {
+        analogWrite(signLight_pin, i);
+        delay(lightSpeed);
+      }
+      isSignLightsOn = 1;
+    }
+  }
+  if (state == "Off") {
+    if (isSignLightsOn == 1) {
+      for (int i = 255; i >= 0; i = i - 2) {
+        analogWrite(signLight_pin, i);
+        delay(lightSpeed);
+      }
+      analogWrite(signLight_pin, 0);
+      isSignLightsOn = 0;
+    }
+  }
+}
+
+void fogLightAction(String state) {
+  if (state == "On") {
+    if (isFogLightsOn == 0) {
+      sideLights();
+      isFogLightsOn = 1;
+    }
+  }
+  if (state == "Off") {
+    if (isFogLightsOn  == 1) {
+      pixelsOff();
+      isFogLightsOn = 0;
+    }
+  }
+}
+
 void parkingLightsAction(String state) {
   if (state == "On") {
     isParkingLightsOn = 1;
@@ -171,9 +218,11 @@ void parkingLightOnSwitch() {
   if (parkingSwitchState == HIGH) {
     // turn on:
     parkingLightsAction("On");
+    signLightAction("On");
   } else {
     // turn off:
     parkingLightsAction("Off");
+    signLightAction("Off");    
   }
 }
 
@@ -196,7 +245,7 @@ void parkingLightsOnSlow() {
 
 void pixelsOff() {
   int j = 46;
-  for(int i = 47; i < 97; i++){
+  for(int i = 47; i < NUMPIXELS; i++){
     pixels.setPixelColor(i, pixels.Color(0,0,0));
     pixels.setPixelColor(j, pixels.Color(0,0,0));
     j -= 1;
@@ -206,12 +255,66 @@ void pixelsOff() {
 
 void pixelsOn() {
   int j = 46;
-  for(int i = 47; i < 97; i++){
+  for(int i = 47; i < NUMPIXELS; i++){
     pixels.setPixelColor(i, pixels.Color(255, 255, 0));
     pixels.setPixelColor(j, pixels.Color(255, 255, 0));
     j -= 1;
   }
   pixels.show();
+}
+
+void sideLights() {
+  pixels.setPixelColor(0, pixels.Color(255, 255, 0));
+  pixels.setPixelColor(1, pixels.Color(255, 255, 0));
+  pixels.setPixelColor(95, pixels.Color(255, 255, 0));
+  pixels.setPixelColor(96, pixels.Color(255, 255, 0));
+  pixels.show();
+}
+
+void fogLights() {
+  for(int i = 0; i < NUMPIXELS + 17; i = i + 5) {
+    pixels.setPixelColor(i, pixels.Color(255, 255, 0));
+    pixels.setPixelColor(i - 1, pixels.Color(255, 255, 0));
+    pixels.setPixelColor(i - 2, pixels.Color(255, 255, 0));
+    pixels.setPixelColor(i - 3, pixels.Color(255, 255, 0));
+    pixels.setPixelColor(i - 4, pixels.Color(255, 255, 0));
+    pixels.show();
+    delay(50);
+    
+    pixels.setPixelColor(i, pixels.Color(20, 20, 0));
+    pixels.setPixelColor(i - 1, pixels.Color(20, 20, 0));
+    pixels.setPixelColor(i - 2, pixels.Color(20, 20, 0));
+    pixels.setPixelColor(i - 3, pixels.Color(20, 20, 0));
+    pixels.setPixelColor(i - 4, pixels.Color(20, 20, 0));
+    
+    pixels.setPixelColor(i - 5, pixels.Color(0, 0, 0));
+    pixels.setPixelColor(i - 6, pixels.Color(0, 0, 0));
+    pixels.setPixelColor(i - 7, pixels.Color(0, 0, 0));
+    pixels.setPixelColor(i - 8, pixels.Color(0, 0, 0));
+    pixels.setPixelColor(i - 9, pixels.Color(0, 0, 0));
+  }
+
+  for(int i = NUMPIXELS; i > -7; i = i - 5) {
+    pixels.setPixelColor(i, pixels.Color(255, 255, 0));
+    pixels.setPixelColor(i - 1, pixels.Color(255, 255, 0));
+    pixels.setPixelColor(i - 2, pixels.Color(255, 255, 0));
+    pixels.setPixelColor(i - 3, pixels.Color(255, 255, 0));
+    pixels.setPixelColor(i - 4, pixels.Color(255, 255, 0));
+    pixels.show();
+    delay(50);
+    pixels.setPixelColor(i, pixels.Color(20, 20, 0));
+    pixels.setPixelColor(i - 1, pixels.Color(20, 20, 0));
+    pixels.setPixelColor(i - 2, pixels.Color(20, 20, 0));
+    pixels.setPixelColor(i - 3, pixels.Color(20, 20, 0));
+    pixels.setPixelColor(i - 4, pixels.Color(20, 20, 0));
+
+    pixels.setPixelColor(i + 1, pixels.Color(0, 0, 0));
+    pixels.setPixelColor(i + 2, pixels.Color(0, 0, 0));
+    pixels.setPixelColor(i + 3, pixels.Color(0, 0, 0));
+    pixels.setPixelColor(i + 4, pixels.Color(0, 0, 0));
+    pixels.setPixelColor(i + 5, pixels.Color(0, 0, 0));
+  }
+  pixelsOff();
 }
 
 void toOutside(int delaySpeed1, int colorH, int colorL) {
@@ -266,10 +369,6 @@ void toInside(int delaySpeed1, int colorH, int colorL) {
   pixels.show();
 }
 
-void blinkFast() {
-  
-}
-
 // Car functions
 void openCar() {
   toOutside(10, 250, 10);
@@ -277,19 +376,23 @@ void openCar() {
   toOutside(10, 250, 250);
 
   flameLightAction("Up");
+  signLightAction("On");
   delay(2000);
   parkingLightsActionSlow("Off");
+  signLightAction("Off");
   pixelsOff();
 }
 
 void closeCar() {
   brakingLightsAction("On");
+  signLightAction("On");
   toInside(10, 250, 10);
   toOutside(0,  250, 10);
   toInside(10, 250, 250);
 
   flameLightAction("Down");
   brakingLightsAction("Off");
+  signLightAction("Off");
   toInside(10, 250, 0); 
 }
 
@@ -322,9 +425,30 @@ void loop() {
 //  brakeLightOnSwitch();  
 //  parkingLightsOnSlow();
 //  pixelsOff();
-//  openCar();
 //  closeCar();
+//  sideLights();
+//  fogLights();
 
   checkAccelAndBlink();
   parkingLightOnSwitch();
+
+  openCarSwitchState = digitalRead(openCar_pin);
+  closeCarSwitchState = digitalRead(closeCar_pin);
+  fogSwitchState = digitalRead(fogSwitch_pin);
+  
+  if (openCarSwitchState == 1) {
+    openCar();
+  }
+
+  if (closeCarSwitchState == 1) {
+    closeCar();
+  }
+
+  // Fog Lights
+  if (fogSwitchState == 1) {
+    fogLights();
+//    fogLightAction("On");
+  } else {
+    fogLightAction("Off");
+  }
 }
