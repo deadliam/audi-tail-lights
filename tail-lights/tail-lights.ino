@@ -3,6 +3,7 @@
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
+#include<Wire.h>
 
 #define brakeSwitch_pin 4
 #define parkingSwitch_pin 7
@@ -10,6 +11,8 @@
 #define tailLight_pin1 5
 #define tailLight_pin2 9
 #define neoLights_pin 6
+#define openCar_pin 2
+#define closeCar_pin 8
 
 #define NUMPIXELS 97
 
@@ -22,6 +25,10 @@ int lowBrightness = 20;
 int flameBrightness = 250;
 int colorHigh = 255;
 int colorLow = 20;
+int accelerationLimit = 2000;
+
+const int MPU=0x68; 
+int16_t AcX;
 
 // NeoPixels
 // 1 - 14   left corner
@@ -34,10 +41,19 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, neoLights_pin, NEO_GRB +
 void setup() {
   pinMode(brakeSwitch_pin, INPUT_PULLUP); //INPUT_PULLUP
   pinMode(parkingSwitch_pin, INPUT_PULLUP);
+  pinMode(openCar_pin, INPUT_PULLUP);
+  pinMode(closeCar_pin, INPUT_PULLUP);
   pinMode(stopLight_pin, OUTPUT);
   pinMode(tailLight_pin1, OUTPUT);
   pinMode(tailLight_pin2, OUTPUT);
   pixels.begin();
+
+  Wire.begin();
+  Wire.beginTransmission(MPU);
+  Wire.write(0x6B); 
+  Wire.write(0);    
+  Wire.endTransmission(true);
+  Serial.begin(9600);
 }
 
 //Action functions
@@ -188,6 +204,16 @@ void pixelsOff() {
   pixels.show();
 }
 
+void pixelsOn() {
+  int j = 46;
+  for(int i = 47; i < 97; i++){
+    pixels.setPixelColor(i, pixels.Color(255, 255, 0));
+    pixels.setPixelColor(j, pixels.Color(255, 255, 0));
+    j -= 1;
+  }
+  pixels.show();
+}
+
 void toOutside(int delaySpeed1, int colorH, int colorL) {
   int count = 47;
 //  int delaySpeed1 = 15;
@@ -240,6 +266,11 @@ void toInside(int delaySpeed1, int colorH, int colorL) {
   pixels.show();
 }
 
+void blinkFast() {
+  
+}
+
+// Car functions
 void openCar() {
   toOutside(10, 250, 10);
   toInside(0, 250, 10);
@@ -262,23 +293,38 @@ void closeCar() {
   toInside(10, 250, 0); 
 }
 
+// Extra Brake
+
+void checkAccelAndBlink() {
+  brakeSwitchState = digitalRead(brakeSwitch_pin);
+  Wire.beginTransmission(MPU);
+  Wire.write(0x3B);  
+  Wire.endTransmission(false);
+  Wire.requestFrom(MPU, 12, true);  
+  AcX = Wire.read() << 8|Wire.read();
+  if (brakeSwitchState == 1 && (AcX + 1500) > accelerationLimit) {
+    blinkBrake();    
+  }
+  delay(30);
+}
+
+void blinkBrake() {
+  for (int i = 0; i < 5; i++) {
+      pixelsOn();
+      delay(100);
+      pixelsOff();
+      delay(50);  
+    }
+}
+
 // MAIN
 void loop() {
-  
-  brakeLightOnSwitch();
-//  parkingLightOnSwitch();
-  parkingLightsOnSlow();
-
-  pixelsOff();
-  
-  delay(1000);
-//  
+//  brakeLightOnSwitch();  
+//  parkingLightsOnSlow();
+//  pixelsOff();
 //  openCar();
-//  
-//  delay(5000);
+//  closeCar();
 
-  closeCar();
-
-  delay(5000);
-  
+  checkAccelAndBlink();
+  parkingLightOnSwitch();
 }
