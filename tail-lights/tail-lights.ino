@@ -15,6 +15,7 @@
 #define neoLights_pin 6
 #define openCar_pin 2
 #define closeCar_pin 8
+#define LONGEST_PAUSE 1000
 
 #define NUMPIXELS 97
 
@@ -33,6 +34,10 @@ int flameBrightness = 250;
 int colorHigh = 255;
 int colorLow = 20;
 int accelerationLimit = 2000;
+
+int buttonState = 0;
+unsigned long lastClick;
+unsigned int counter;
 
 const int MPU=0x68; 
 int16_t AcX;
@@ -428,6 +433,41 @@ void loop() {
 //  closeCar();
 //  sideLights();
 //  fogLights();
+//-----------------------------------------------------
+// Count blinking
+  if (digitalRead(openCar_pin) == HIGH) {
+    // button is pressed
+    while(digitalRead(openCar_pin) == HIGH) {
+      delay(1.2); // wait until button released
+    }
+    lastClick = millis();
+    counter++;
+  }
+
+  if (counter > 0 && (millis() - lastClick) >= LONGEST_PAUSE) { // 1s passed since last click: let's play!
+    switch(counter) {
+      case 1:
+        closeCar();
+        Serial.println("Close Car"); 
+        break;
+      case 2:
+        openCar();
+        Serial.println("Open Car"); 
+        break;
+      case 3:
+        Serial.println("case 3"); 
+        break;
+      case 4:
+        openCar();
+        Serial.println("Open Car"); 
+        break;
+      default:
+        // what if I keep clicking?!?
+        Serial.println("Do Nothing");
+    }
+    counter = 0; // reset the counter
+  }
+  //-----------------------------------------------------
 
   checkAccelAndBlink();
   parkingLightOnSwitch();
@@ -435,14 +475,6 @@ void loop() {
   openCarSwitchState = digitalRead(openCar_pin);
   closeCarSwitchState = digitalRead(closeCar_pin);
   fogSwitchState = digitalRead(fogSwitch_pin);
-  
-  if (openCarSwitchState == 1) {
-    openCar();
-  }
-
-  if (closeCarSwitchState == 1) {
-    closeCar();
-  }
 
   // Fog Lights
   if (fogSwitchState == 1) {
