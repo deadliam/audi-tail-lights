@@ -16,6 +16,7 @@
 #define openCar_pin 2
 #define closeCar_pin 8
 #define LONGEST_PAUSE 1000
+#define RESET_PAUSE 300000
 
 #define NUMPIXELS 97
 
@@ -38,9 +39,13 @@ int accelerationLimit = 2000;
 int buttonState = 0;
 unsigned long lastClick;
 unsigned int counter;
+unsigned long startTime;
 
 const int MPU=0x68; 
 int16_t AcX;
+
+// temp var
+int serialCounter = 0;
 
 // NeoPixels
 // 1 - 14   left corner
@@ -49,6 +54,9 @@ int16_t AcX;
 // 47 - 82  right corner
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, neoLights_pin, NEO_GRB + NEO_KHZ800);
+
+// Reset Arduino func
+void(* resetFunc) (void) = 0;
 
 void setup() {
   pinMode(brakeSwitch_pin, INPUT_PULLUP); //INPUT_PULLUP
@@ -68,6 +76,8 @@ void setup() {
   Wire.write(0);    
   Wire.endTransmission(true);
   Serial.begin(9600);
+
+  startTime = millis();
 }
 
 //Action functions
@@ -374,6 +384,25 @@ void toInside(int delaySpeed1, int colorH, int colorL) {
   pixels.show();
 }
 
+void fillStrip(uint8_t wait) {
+  for(uint16_t i = 0; i < 46; i++) {
+    int r = 255;
+    int g = 255;
+    int b = 0;
+    int k = 47;
+    for(uint16_t j = 0; j < 46 - i; j++) {
+      pixels.setPixelColor(j - 1, pixels.Color(0, 0, 0));
+      pixels.setPixelColor(j, pixels.Color(r, g, b));
+      
+      pixels.setPixelColor(k + 1, pixels.Color(0, 0, 0));
+      pixels.setPixelColor(k, pixels.Color(r, g, b));
+      k--;
+      pixels.show();
+      delay(wait);
+    }
+  }
+}
+
 // Car functions
 void openCar() {
   toOutside(10, 250, 10);
@@ -435,9 +464,9 @@ void loop() {
 //  fogLights();
 //-----------------------------------------------------
 // Count blinking
-  if (digitalRead(openCar_pin) == HIGH) {
+  if (digitalRead(closeCar_pin) == HIGH) {
     // button is pressed
-    while(digitalRead(openCar_pin) == HIGH) {
+    while(digitalRead(closeCar_pin) == HIGH) {
       delay(1.2); // wait until button released
     }
     lastClick = millis();
@@ -458,7 +487,7 @@ void loop() {
         Serial.println("case 3"); 
         break;
       case 4:
-        openCar();
+        closeCar();
         Serial.println("Open Car"); 
         break;
       default:
@@ -483,4 +512,17 @@ void loop() {
   } else {
     fogLightAction("Off");
   }
+
+//  pixelsOff();
+//  delay(300000);
+//  serialCounter++;
+//  // Reset Arduino every N sec
+//  if (millis() - startTime > RESET_PAUSE) {
+//    pixelsOff();
+//    delay(3000);
+//    startTime = millis();
+//    resetFunc();
+//  }
+//
+//  Serial.println(serialCounter);
 }
